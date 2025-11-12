@@ -183,6 +183,11 @@ if 'selected_age' not in st.session_state:
 if 'selected_gender' not in st.session_state:
     st.session_state.selected_gender = '選択してください'
 
+
+def switch_to_camera():
+    # ボタンが押されたときのみ状態を切り替える
+    st.session_state['page'] = 'camera'
+
 deco_base64, deco_mime = get_base64_image("images/decorative_cosme_01.png")
 import streamlit.components.v1 as components
 
@@ -265,28 +270,41 @@ def show_start_page():
         unsafe_allow_html=True
     )
 
-    # --- 中央ボタン ---
-    st.markdown(
-        """
-        <div style='text-align:center; margin-top: 40px;'>
-            <a href='#' style='
-                display:inline-block;
-                padding: 14px 40px;
-                background-color:#ff8fab;
-                color:white;
-                font-size:18px;
-                font-weight:bold;
-                text-decoration:none;
-                border-radius:30px;
-                transition:0.2s;
-            ' onmouseover="this.style.backgroundColor='#ff6f91';"
-            onmouseout="this.style.backgroundColor='#ff8fab';">
-            診断を始める
-            </a>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    # --- 1. カスタムボタンのCSSを定義 ---
+    # ボタンの見た目（背景色、文字色、角丸など）をCSSで定義
+    # .stButton > button のセレクタを使ってボタンを装飾
+    st.markdown("""
+    <style>
+    div.stButton > button {
+        display: inline-block;
+        padding: 14px 40px;
+        background-color: #ff8fab; /* カスタムカラー */
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        text-decoration: none;
+        border-radius: 30px;
+        transition: 0.2s;
+        border: none; /* デフォルトの枠線を消す */
+    }
+    /* ホバー時の色もCSSで指定 */
+    div.stButton > button:hover {
+        background-color: #ff6f91;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # --- 2. Streamlitのボタンを配置し、機能を持たせる ---
+    # 中央寄せのためのコンテナ
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2: # 真ん中のカラムにボタンを配置して中央寄せにする
+        # 前回定義した on_click コールバックを使用
+        st.button(
+            '診断を始める', 
+            on_click=switch_to_camera,
+            use_container_width=True 
+        )
         
 # ----------------------------------------------------------------------
 
