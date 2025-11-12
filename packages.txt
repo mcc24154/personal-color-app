@@ -1,0 +1,4 @@
+# OpenCVが動作するために必要なシステムライブラリ
+libsm6
+libxext6
+libxrender1
