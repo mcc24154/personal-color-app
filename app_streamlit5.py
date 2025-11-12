@@ -462,6 +462,10 @@ def show_diagnosis_page():
                 st.info("画像を撮り直して再度お試しください。")
                 st.session_state.diagnosed_season = None
 
+def show_simple_camera_page():
+    st.header("デバッグ成功：カメラ画面に到達")
+    st.markdown("ボタンが正しく機能しました。**ここから元のカメラウィジェットのコードを少しずつ復元します。**")
+    
 
 def show_result_page():
     st.title('✅ 診断完了！あなたのパーソナルカラー結果')
@@ -637,9 +641,12 @@ all_custom_css = font_css + visual_css
 st.markdown(all_custom_css, unsafe_allow_html=True)
 
 # 画面状態に応じて関数を呼び出す
+st.sidebar.info("デバッグ情報：アプリの初期化は完了しました。")
 if st.session_state.page == 'start':
     show_start_page()
-elif st.session_state.page == 'diagnosis':
-    show_diagnosis_page()
+elif st.session_state.page == 'camera':
+    # 元の show_diagnosis_page() の代わりに、シンプルなデバッグ関数を呼び出す
+    show_simple_camera_page() 
+    
 elif st.session_state.page == 'result':
     show_result_page()
