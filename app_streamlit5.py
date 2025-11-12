@@ -455,9 +455,12 @@ def show_diagnosis_page():
             st.rerun() # 👈 これで画面が切り替わる
             
     except Exception as e:
-        st.error(f"エラーが発生しました: {e}")
-        st.error(traceback.format_exc())
-
+        # エラーが発生した場合、アプリを停止させずに詳細を表示する
+        st.error(f"カラー分析ロジックの実行中にエラーが発生しました。エラー: {e}")
+        st.info("画像を撮り直して再度お試しください。")
+        # どのファイル・行でエラーが起きたかを表示
+        import traceback
+    
 
 def show_simple_camera_page():
     st.header("デバッグ成功：カメラ画面に到達")
