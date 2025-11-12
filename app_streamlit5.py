@@ -434,34 +434,30 @@ def show_diagnosis_page():
         st.session_state.lab_data = {}
     
     if captured_file is not None:
-        # ⚠️ ここから処理を復活させる ⚠️
-        st.subheader("ステップ2: カラー分析の実行") # 👈 このヘッダーが表示された後で停止
+        st.subheader("ステップ2: カラー分析の実行")
     
     try:
         # 画像処理（成功済み）
         file_bytes = np.asarray(bytearray(captured_file.read()), dtype=np.uint8)
         img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
 
-        st.success("画像処理（OpenCVデコード）に成功しました！")
-        st.image(img_bgr, channels="BGR")
-        
-        # --- ⚠️ 分析ロジックの呼び出しを復活させる ⚠️ ---
         with st.spinner("診断を実行中です..."):
-            # 本物の診断ロジックを呼び出し
             season, lab_data = analyze_image_for_color(img_bgr) 
             
-            # 診断が成功したら成功メッセージを表示
             st.success(f"🎉 カラー分析ロジックの実行に成功しました！結果: {season}")
             
-            # 遷移コードはまだコメントアウト
-            # st.session_state.diagnosed_season = season
-            # st.session_state.lab_data = lab_data
-            # st.session_state.page = 'result'
-            # st.rerun() 
+            # 診断が成功した場合のみ、セッション状態に保存
+            st.session_state.diagnosed_season = season
+            st.session_state.lab_data = lab_data
+            
+            # 結果ページへ遷移し、アプリを再実行
+            st.session_state.page = 'result'
+            st.rerun() # 👈 これで画面が切り替わる
             
     except Exception as e:
         # エラーが発生した場合、アプリを停止させずに詳細を表示する
-        st.error("❌ カラー分析ロジックの実行中にエラーが発生しました。")
+        st.error(f"カラー分析ロジックの実行中にエラーが発生しました。エラー: {e}")
+        st.info("画像を撮り直して再度お試しください。")
         # どのファイル・行でエラーが起きたかを表示
         import traceback
         st.code(traceback.format_exc())
