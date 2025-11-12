@@ -458,13 +458,9 @@ def show_diagnosis_page():
         # エラーが発生した場合、アプリを停止させずに詳細を表示する
         st.error(f"カラー分析ロジックの実行中にエラーが発生しました。エラー: {e}")
         st.info("画像を撮り直して再度お試しください。")
+        st.session_state.diagnosed_season = None
         #import traceback
-    
-
-def show_simple_camera_page():
-    st.header("デバッグ成功：カメラ画面に到達")
-    st.markdown("ボタンが正しく機能しました。**ここから元のカメラウィジェットのコードを少しずつ復元します。**")
-    
+        
 
 def show_result_page():
     st.title('✅ 診断完了！あなたのパーソナルカラー結果')
