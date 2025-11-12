@@ -428,6 +428,34 @@ def show_diagnosis_page():
     # Webカメラの起動と静止画キャプチャ（Streamlitの強力な機能！）
     captured_file = st.camera_input("カメラで撮影")
     
+    if 'diagnosed_season' not in st.session_state:
+        st.session_state.diagnosed_season = None
+    if 'lab_data' not in st.session_state:
+        st.session_state.lab_data = {}
+    
+    if captured_file is not None:
+        # ⚠️ ここから処理を復活させる ⚠️
+        st.subheader("ステップ2: カラー分析の実行 (処理確認中)") # 👈 このヘッダーが表示されるか確認
+        
+        try:
+            # Streamlitから画像データを取得し、OpenCV形式に変換
+            file_bytes = np.asarray(bytearray(captured_file.read()), dtype=np.uint8)
+            img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+
+            # 画像処理が成功したことを確認
+            st.success("画像処理（OpenCVデコード）に成功しました！") # 👈 成功メッセージの表示
+            st.image(img_bgr, channels="BGR") # 👈 デバッグ用に画像を一度表示
+            
+            # --- ここから下の分析・遷移コードはコメントアウトを継続 ---
+            # season, lab_data = analyze_image_for_color(img_bgr)
+            # st.session_state.page = 'result'
+            # st.rerun() 
+            # ----------------------------------------------------
+            
+        except Exception as e:
+            # 画像処理のエラーをキャッチして表示
+            st.error(f"⚠️ 画像処理中にエラーが発生しました。エラー: {e}")
+            st.info("このエラーはOpenCVやNumpyの処理で発生しています。")
     
 
 def show_simple_camera_page():
