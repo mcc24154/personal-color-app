@@ -433,8 +433,11 @@ def show_diagnosis_page():
     if 'lab_data' not in st.session_state:
         st.session_state.lab_data = {}
     
-    if captured_file is not None:
-        st.subheader("ステップ2: カラー分析の実行")
+    if captured_file is None:
+        st.info("📸 写真を撮影してから診断を実行してください。")
+        return
+    
+    st.subheader("ステップ2: カラー分析の実行")
     
     try:
         # 画像処理（成功済み）
@@ -444,22 +447,18 @@ def show_diagnosis_page():
         with st.spinner("診断を実行中です..."):
             season, lab_data = analyze_image_for_color(img_bgr) 
             
-            st.success(f"🎉 カラー分析ロジックの実行に成功しました！結果: {season}")
+        st.success(f"🎉 カラー分析が完了しました！結果: {season}")
             
-            # 診断が成功した場合のみ、セッション状態に保存
-            st.session_state.diagnosed_season = season
-            st.session_state.lab_data = lab_data
-            
-            # 結果ページへ遷移し、アプリを再実行
-            st.session_state.page = 'result'
-            st.rerun() # 👈 これで画面が切り替わる
+            # 結果をセッションに保存
+        st.session_state.diagnosed_season = season
+        st.session_state.lab_data = lab_data
+        st.session_state.page = 'result'
+        st.rerun()
             
     except Exception as e:
         # エラーが発生した場合、アプリを停止させずに詳細を表示する
         st.error(f"カラー分析ロジックの実行中にエラーが発生しました。エラー: {e}")
         st.info("画像を撮り直して再度お試しください。")
-        st.session_state.diagnosed_season = None
-        #import traceback
         
 
 def show_result_page():
