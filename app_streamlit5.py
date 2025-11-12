@@ -428,39 +428,7 @@ def show_diagnosis_page():
     # Webカメラの起動と静止画キャプチャ（Streamlitの強力な機能！）
     captured_file = st.camera_input("カメラで撮影")
     
-    # セッション状態の初期化
-    if 'diagnosed_season' not in st.session_state:
-        st.session_state.diagnosed_season = None
-    if 'lab_data' not in st.session_state:
-        st.session_state.lab_data = {}
     
-    if captured_file is not None:
-        st.subheader("ステップ2: カラー分析の実行")
-        st.warning("この処理は数秒かかります。そのままお待ちください...")
-
-        # Streamlitから画像データを取得し、OpenCV形式に変換
-        file_bytes = np.asarray(bytearray(captured_file.read()), dtype=np.uint8)
-        img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-
-        # 診断の実行と結果画面への遷移
-        with st.spinner("診断を実行中です..."):
-            try:
-                # 本物の診断ロジックを呼び出し
-                season, lab_data = analyze_image_for_color(img_bgr)
-                
-                # 診断が成功した場合のみ、セッション状態に保存
-                st.session_state.diagnosed_season = season
-                st.session_state.lab_data = lab_data
-                
-                # 結果ページへ遷移
-                st.session_state.page = 'result'
-                st.rerun() 
-                
-            except Exception as e:
-                # 診断ロジックの実行中にエラーが発生した場合
-                st.error(f"カラー分析中にエラーが発生しました。エラー: {e}")
-                st.info("画像を撮り直して再度お試しください。")
-                st.session_state.diagnosed_season = None
 
 def show_simple_camera_page():
     st.header("デバッグ成功：カメラ画面に到達")
@@ -645,8 +613,6 @@ st.sidebar.info("デバッグ情報：アプリの初期化は完了しました
 if st.session_state.page == 'start':
     show_start_page()
 elif st.session_state.page == 'camera':
-    # 元の show_diagnosis_page() の代わりに、シンプルなデバッグ関数を呼び出す
-    show_simple_camera_page() 
-    
+    show_diagnosis_page()
 elif st.session_state.page == 'result':
     show_result_page()
