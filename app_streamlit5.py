@@ -455,14 +455,9 @@ def show_diagnosis_page():
             st.rerun() # 👈 これで画面が切り替わる
             
     except Exception as e:
-        # エラーが発生した場合、アプリを停止させずに詳細を表示する
-        st.error(f"カラー分析ロジックの実行中にエラーが発生しました。エラー: {e}")
-        st.info("画像を撮り直して再度お試しください。")
-        # どのファイル・行でエラーが起きたかを表示
-        import traceback
-        st.code(traceback.format_exc())
-        st.info("原因は color_analyzer.py 内のファイルパス間違いか、Pythonの構文エラーの可能性が高いです。")
-    
+        st.error(f"エラーが発生しました: {e}")
+        st.error(traceback.format_exc())
+
 
 def show_simple_camera_page():
     st.header("デバッグ成功：カメラ画面に到達")
@@ -643,7 +638,6 @@ all_custom_css = font_css + visual_css
 st.markdown(all_custom_css, unsafe_allow_html=True)
 
 # 画面状態に応じて関数を呼び出す
-st.sidebar.info("デバッグ情報：アプリの初期化は完了しました。")
 if st.session_state.page == 'start':
     show_start_page()
 elif st.session_state.page == 'camera':
