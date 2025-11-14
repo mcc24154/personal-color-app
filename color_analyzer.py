@@ -1,12 +1,21 @@
 import cv2
 import numpy as np
 
+# Streamlit側から渡される可能性があるためインポート
+try:
+    import streamlit as st
+    from app_streamlit import to_gal_moji
+except (ImportError, ModuleNotFoundError):
+    # Streamlit環境外で実行される場合のためのフォールバック
+    def to_gal_moji(text):
+        return text
+
 # ★★★ Streamlitと連携するための関数 ★★★
 def analyze_image_for_color(img_bgr): # ① 引数を使う
     
     if img_bgr is None:
         # Streamlitから画像が渡されなかった場合は何もしない
-        return "エラー: 画像データが空です", {}
+        return to_gal_moji("エラー: 画像データが空です"), {}
     
     # 3. 座標の定義を画像サイズ取得後に行う
     h, w, _ = img_bgr.shape
@@ -80,30 +89,30 @@ def analyze_image_for_color(img_bgr): # ① 引数を使う
     # ベースカラー判定 (b*値で黄み/青みを判定)
     # B > 132 (仮の閾値) => イエローベース (イエベ)
     # B <= 132            => ブルーベース (ブルベ)
-    B_THRESHOLD = 132.0 # [cite: 6]
-    BASE_COLOR = "イエローベース (イエベ)" if B > B_THRESHOLD else "ブルーベース (ブルベ)" [cite: 6]
+    B_THRESHOLD = 132.0
+    BASE_COLOR = "イエローベース (イエベ)" if B > B_THRESHOLD else "ブルーベース (ブルベ)"
     
     # 明度/彩度判定 (L*値で明るさ、a*値で赤み/鮮やかさを補助的に判定)
     # L* > 140 (仮の閾値) => 明るい/クリア (春、夏)
     # L* <= 140           => 暗い/ディープ (秋、冬)
-    L_THRESHOLD = 140.0 # [cite: 7]
+    L_THRESHOLD = 140.0
     BRIGHTNESS = L > L_THRESHOLD 
     
     # 診断の実行
     if BASE_COLOR == "イエローベース (イエベ)":
         if BRIGHTNESS:
             # イエベで明るい (鮮やか/クリア) -> 春
-            personal_color = "イエベ春 (Spring)"
+            personal_color = to_gal_moji("イエベ春 (Spring)")
         else:
             # イエベで暗い (落ち着いた/ディープ) -> 秋
-            personal_color = "イエベ秋 (Autumn)"
+            personal_color = to_gal_moji("イエベ秋 (Autumn)")
     else: # ブルーベース (ブルベ)
         if BRIGHTNESS:
             # ブルベで明るい (涼しげ/ソフト) -> 夏
-            personal_color = "ブルベ夏 (Summer)"
+            personal_color = to_gal_moji("ブルベ夏 (Summer)")
         else:
             # ブルベで暗い (はっきり/シャープ) -> 冬
-            personal_color = "ブルベ冬 (Winter)" 
+            personal_color = to_gal_moji("ブルベ冬 (Winter)")
     
     # 9. 最終結果の準備
     lab_data = {'L': float(L), 'a': float(A), 'b': float(B)}
