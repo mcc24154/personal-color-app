@@ -483,44 +483,53 @@ if 'coord_season_key' not in st.session_state:
 
 
 def show_diagnosis_page():
-    st.header(to_gal_moji("ステップ1: 写真の撮影"))
-    st.info(to_gal_moji("💡 **白い紙**を肌の横に並べ、影が入らないように撮影してください。"))
-    
-    # Webカメラの起動と静止画キャプチャ（Streamlitの強力な機能！）
-    captured_file = st.camera_input(to_gal_moji("カメラで撮影"))
-    
+    st.header(to_gal_moji("ステップ1: 写真の撮影またはアップロード"))
+    st.info(to_gal_moji("💡 **白い紙**を肌の横に並べ、影が入らないように撮影、またはアップロードしてください。"))
+
+    # タブを使ってカメラ撮影とファイルアップロードを切り替える
+    tab1, tab2 = st.tabs([to_gal_moji("📷 カメラで撮影"), to_gal_moji("📂 ファイルをアップロード")])
+
+    input_file = None
+    with tab1:
+        # Webカメラの起動と静止画キャプチャ
+        captured_file = st.camera_input(to_gal_moji("カメラを起動"), label_visibility="collapsed")
+        if captured_file:
+            input_file = captured_file
+
+    with tab2:
+        # ファイルアップローダー
+        uploaded_file = st.file_uploader(to_gal_moji("画像ファイルを選択"), type=['jpg', 'jpeg', 'png'], label_visibility="collapsed")
+        if uploaded_file:
+            input_file = uploaded_file
+
     if 'diagnosed_season' not in st.session_state:
         st.session_state.diagnosed_season = None
     if 'lab_data' not in st.session_state:
         st.session_state.lab_data = {}
-    
-    if captured_file is None:
-        st.info(to_gal_moji("📸 写真を撮影してから診断を実行してください。"))
+
+    if input_file is None:
+        st.info(to_gal_moji("📸 写真を撮影またはアップロードして診断を実行してください。"))
         return
-    
+
     st.subheader(to_gal_moji("ステップ2: カラー分析の実行"))
-    
+
     try:
-        # 画像処理（成功済み）
-        file_bytes = np.asarray(bytearray(captured_file.read()), dtype=np.uint8)
+        file_bytes = np.asarray(bytearray(input_file.read()), dtype=np.uint8)
         img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
 
         with st.spinner(to_gal_moji("診断を実行中です...")):
-            season, lab_data = analyze_image_for_color(img_bgr) 
-            
+            season, lab_data = analyze_image_for_color(img_bgr)
+
         st.success(f"🎉 {to_gal_moji('カラー分析が完了しました！')} {to_gal_moji('結果')}: {to_gal_moji(season)}")
-            
-            # 結果をセッションに保存
+
         st.session_state.diagnosed_season = season
         st.session_state.lab_data = lab_data
         st.session_state.page = 'result'
         st.rerun()
-            
+
     except Exception as e:
-        # エラーが発生した場合、アプリを停止させずに詳細を表示する
         st.error(f"{to_gal_moji('カラー分析ロジックの実行中にエラーが発生しました。')} エラー: {e}")
         st.info(to_gal_moji("画像を撮り直して再度お試しください。"))
-        
 
 def show_result_page():
     st.title(to_gal_moji('✅ 診断完了！あなたのパーソナルカラー結果'))
