@@ -14,8 +14,8 @@ except (ImportError, ModuleNotFoundError):
 def analyze_image_for_color(img_bgr): # ① 引数を使う
     
     if img_bgr is None:
-        # Streamlitから画像が渡されなかった場合は何もしない
-        return to_gal_moji("エラー: 画像データが空です"), {}
+        # Streamlitから画像が渡されなかった場合はエラーを返す (戻り値の形式変更)
+        return to_gal_moji("エラー: 画像データが空です"), {}, {}
     
     # 3. 座標の定義を画像サイズ取得後に行う
     h, w, _ = img_bgr.shape
@@ -87,37 +87,69 @@ def analyze_image_for_color(img_bgr): # ① 引数を使う
     # 判定閾値は、多くの分析結果に基づいて調整されるべきものであり、ここでは仮の値を設定しています。
     
     # ベースカラー判定 (b*値で黄み/青みを判定)
-    # B > 132 (仮の閾値) => イエローベース (イエベ)
-    # B <= 132            => ブルーベース (ブルベ)
     B_THRESHOLD = 132.0
-    BASE_COLOR = "イエローベース (イエベ)" if B > B_THRESHOLD else "ブルーベース (ブルベ)"
-    
-    # 明度/彩度判定 (L*値で明るさ、a*値で赤み/鮮やかさを補助的に判定)
-    # L* > 140 (仮の閾値) => 明るい/クリア (春、夏)
-    # L* <= 140           => 暗い/ディープ (秋、冬)
     L_THRESHOLD = 140.0
-    BRIGHTNESS = L > L_THRESHOLD 
-    
-    # 診断の実行
-    if BASE_COLOR == "イエローベース (イエベ)":
-        if BRIGHTNESS:
-            # イエベで明るい (鮮やか/クリア) -> 春
-            personal_color = to_gal_moji("イエベ春 (Spring)")
-        else:
-            # イエベで暗い (落ち着いた/ディープ) -> 秋
-            personal_color = to_gal_moji("イエベ秋 (Autumn)")
-    else: # ブルーベース (ブルベ)
-        if BRIGHTNESS:
-            # ブルベで明るい (涼しげ/ソフト) -> 夏
-            personal_color = to_gal_moji("ブルベ夏 (Summer)")
-        else:
-            # ブルベで暗い (はっきり/シャープ) -> 冬
-            personal_color = to_gal_moji("ブルベ冬 (Winter)")
+
+    # --- 連続的なスコア計算 ---
+    # B値 (黄み/青み) のスコア
+    # 閾値の±8の範囲でグラデーション (例: 124-140)
+    B_RANGE_WIDTH = 16 
+    b_low_bound = B_THRESHOLD - B_RANGE_WIDTH / 2
+    b_high_bound = B_THRESHOLD + B_RANGE_WIDTH / 2
+
+    yellow_score = 0.0
+    if B >= b_high_bound:
+        yellow_score = 1.0
+    elif B <= b_low_bound:
+        yellow_score = 0.0
+    else:
+        yellow_score = (B - b_low_bound) / B_RANGE_WIDTH
+    blue_score = 1.0 - yellow_score
+
+    # L値 (明るさ/暗さ) のスコア
+    # 閾値の±10の範囲でグラデーション (例: 130-150)
+    L_RANGE_WIDTH = 20 
+    l_low_bound = L_THRESHOLD - L_RANGE_WIDTH / 2
+    l_high_bound = L_THRESHOLD + L_RANGE_WIDTH / 2
+
+    bright_score = 0.0
+    if L >= l_high_bound:
+        bright_score = 1.0
+    elif L <= l_low_bound:
+        bright_score = 0.0
+    else:
+        bright_score = (L - l_low_bound) / L_RANGE_WIDTH
+    dark_score = 1.0 - bright_score
+
+    # 各シーズンの相対スコアを計算
+    spring_raw_score = yellow_score * bright_score
+    autumn_raw_score = yellow_score * dark_score
+    summer_raw_score = blue_score * bright_score
+    winter_raw_score = blue_score * dark_score
+
+    # 合計スコアで正規化してパーセンテージを算出
+    total_raw_score = spring_raw_score + autumn_raw_score + summer_raw_score + winter_raw_score
+
+    season_percentages = {
+        to_gal_moji("イエベ春 (Spring)"): 0.0,
+        to_gal_moji("イエベ秋 (Autumn)"): 0.0,
+        to_gal_moji("ブルベ夏 (Summer)"): 0.0,
+        to_gal_moji("ブルベ冬 (Winter)"): 0.0,
+    }
+
+    if total_raw_score > 0: # ゼロ除算を避ける
+        season_percentages[to_gal_moji("イエベ春 (Spring)")] = round((spring_raw_score / total_raw_score) * 100, 1)
+        season_percentages[to_gal_moji("イエベ秋 (Autumn)")] = round((autumn_raw_score / total_raw_score) * 100, 1)
+        season_percentages[to_gal_moji("ブルベ夏 (Summer)")] = round((summer_raw_score / total_raw_score) * 100, 1)
+        season_percentages[to_gal_moji("ブルベ冬 (Winter)")] = round((winter_raw_score / total_raw_score) * 100, 1)
+
+    # 最も高いパーセンテージのシーズンを主要な診断結果とする
+    primary_season = max(season_percentages, key=season_percentages.get)
     
     # 9. 最終結果の準備
     lab_data = {'L': float(L), 'a': float(A), 'b': float(B)}
     
     # ★★★ 結果を返す (return) ★★★
-    return personal_color, lab_data
+    return primary_season, lab_data, season_percentages
     
     
