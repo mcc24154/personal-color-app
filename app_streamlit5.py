@@ -73,39 +73,42 @@ FONT_FILE_PATH = "fonts/custom_font.ttf"
 FONT_NAME = "CustomAppFont"
 
 # --- 2. Base64ヘルパー関数の定義 ---
+import os, base64, traceback
+
 def get_base64_image(image_path):
+    """
+    Streamlit Cloud 対応版：アプリの実行ディレクトリからの絶対パスで読み込む
+    """
     print(f"\n=== Base64変換開始 ===")
-    print(f"Path: {image_path}")
-    
-    # ファイルが存在するかチェックし、存在しない場合は空データを返す
-    if not os.path.exists(image_path):
-        print(t(f"❌ ファイルが見つかりません: {image_path}"))
-        return "", "" # Base64データとMIMEタイプを空で返す
-        
+    print(f"指定されたパス: {image_path}")
+
+    # ★ Streamlit Cloud でも安全に存在を確認できる絶対パス
+    abs_path = os.path.join(os.path.dirname(__file__), image_path)
+
+    print(f"実際に読み込むパス: {abs_path}")
+
+    if not os.path.exists(abs_path):
+        print(f"❌ ファイルが見つかりません（Cloud 上）: {abs_path}")
+        return "", ""
+
     try:
-        # ファイル読み込み
-        with open(image_path, "rb") as img_file:
+        with open(abs_path, "rb") as img_file:
             img_bytes = img_file.read()
 
         # Base64変換
         img_base64 = base64.b64encode(img_bytes).decode("utf-8")
-        ext = os.path.splitext(image_path)[1].lower()
-        
-        # MIMEタイプ判定
-        if ext == ".png":
-            mime_type = "image/png"
-        elif ext in (".jpg", ".jpeg"):
-            mime_type = "image/jpeg"
-        else:
-            mime_type = "image/png"
+        ext = os.path.splitext(abs_path)[1].lower()
 
-        print(t(f"✅ 読み込み成功: MIME={mime_type}, Size={len(img_base64)}文字"))
+        mime_type = "image/png" if ext == ".png" else "image/jpeg"
+
+        print(f"✅ 読み込み成功: MIME={mime_type}, Size={len(img_base64)}文字")
         return img_base64, mime_type
 
     except Exception as e:
-        print(t(f"❌ Base64変換中に例外が発生しました: {e}"))
-        traceback.print_exc() 
+        print(f"❌ Base64変換中に例外発生: {e}")
+        traceback.print_exc()
         return "", ""
+
     
     # 既存のフォントBase64エンコードロジックを統合
     with open(FONT_FILE_PATH, "rb") as f:
