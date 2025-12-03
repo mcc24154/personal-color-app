@@ -191,17 +191,22 @@ def set_cosmetic_flow_css():
                 transform: translateX(100%); /* 最初は右外側からスタート */
             }
             100% {
-                transform: translateX(-100%); /* 左外側まで移動 */
+                transform: translateX(-200%); /* 左外側まで移動 */
             }
         }
         
         /* 4. 流れる個々の要素（画像など）のスタイル */
         .cosmetic-item {
             display: inline-block;
-            width: 100px; /* 画像の幅 */
-            height: 100px; /* 画像の高さ */
-            margin-right: 50px; /* 要素間のスペース */
-            object-fit: contain;
+            margin-right: 30px; /* 要素間のスペース */
+        }
+        
+        /* ▽ 画像そのもののサイズ制御（これが本命） */
+        .cosmetic-item img {
+            height: 120px !important;   /* 表示したい高さ */
+            width: auto !important;    /* 縦横比維持 */
+            max-width: none !important;
+            object-fit: contain !important;
         }
         </style>
         """,
@@ -278,11 +283,6 @@ cosme2_base64, cosme2_mime = get_base64_image("images/cosme_flow_02.png")
 cosme3_base64, cosme3_mime = get_base64_image("images/cosme_flow_03.png")
 cosme4_base64, cosme4_mime = get_base64_image("images/cosme_flow_04.png")
 cosme5_base64, cosme5_mime = get_base64_image("images/cosme_flow_05.png")
-cosme6_base64, cosme6_mime = get_base64_image("images/cosme_flow_06.png")
-cosme7_base64, cosme7_mime = get_base64_image("images/cosme_flow_07.png")
-cosme8_base64, cosme8_mime = get_base64_image("images/cosme_flow_08.png")
-cosme9_base64, cosme9_mime = get_base64_image("images/cosme_flow_09.png")
-cosme10_base64, cosme10_mime = get_base64_image("images/cosme_flow_10.png")
 
 import streamlit.components.v1 as components
 
@@ -435,7 +435,15 @@ def show_start_page():
         /* 流れる動きの定義 */
         @keyframes marquee-scroll {
             0% { transform: translateY(0%); } /* 開始地点 */
-            100% { transform: translateX(-100%); } /* コンテンツ幅分左へ移動 */
+            100% { transform: translateX(-200%); } /* コンテンツ幅分左へ移動 */
+        }
+        
+        .cosmetic-item {
+            height: 100px;
+            width: auto;
+            max-width: none;
+            margin-right: 50px;
+            object-fit: contain;
         }
         </style>
         """,
@@ -451,30 +459,24 @@ def show_start_page():
 
     # 10枚の画像を1セットとして定義 (これを3回繰り返す)
     image_set = f"""
-        <img src="data:{cosme1_mime};base64,{cosme1_base64}" style="width: 80px; height: 80px; margin-right: 40px;">
-        <img src="data:{cosme2_mime};base64,{cosme2_base64}" style="width: 80px; height: 80px; margin-right: 40px;">
-        <img src="data:{cosme3_mime};base64,{cosme3_base64}" style="width: 80px; height: 80px; margin-right: 40px;">
-        <img src="data:{cosme4_mime};base64,{cosme4_base64}" style="width: 80px; height: 80px; margin-right: 40px;">
-        <img src="data:{cosme5_mime};base64,{cosme5_base64}" style="width: 80px; height: 80px; margin-right: 40px;">
-        <img src="data:{cosme6_mime};base64,{cosme6_base64}" style="width: 80px; height: 80px; margin-right: 40px;">
-        <img src="data:{cosme7_mime};base64,{cosme7_base64}" style="width: 80px; height: 80px; margin-right: 40px;">
-        <img src="data:{cosme8_mime};base64,{cosme8_base64}" style="width: 80px; height: 80px; margin-right: 40px;">
-        <img src="data:{cosme9_mime};base64,{cosme9_base64}" style="width: 80px; height: 80px; margin-right: 40px;">
-        <img src="data:{cosme10_mime};base64,{cosme10_base64}" style="width: 80px; height: 80px; margin-right: 40px;">
+        <img class="cosmetic-item" src="data:{cosme1_mime};base64,{cosme1_base64}">
+        <img class="cosmetic-item" src="data:{cosme3_mime};base64,{cosme3_base64}">
+        <img class="cosmetic-item" src="data:{cosme4_mime};base64,{cosme4_base64}">
+        <img class="cosmetic-item" src="data:{cosme5_mime};base64,{cosme5_base64}">
     """
 
     # 10枚の画像を1セットとして定義 (アニメーション遅延を計算)
     image_set_parts = []
 
     # cosme1 から cosme10 までの 10枚をループで処理
-    for i in range(1, 11): 
+    for i in range(1, 6): 
         # 垂直アニメーションの遅延を計算: i番目の画像は (i * 0.2秒) 遅れて動き始める
         delay_time = i * 0.2 
         
         # <img> タグに wave-up-down アニメーションと animation-delay を追加
         image_set_parts.append(f"""
-            <img src="data:{globals()[f'cosme{i}_mime']};base64,{globals()[f'cosme{i}_base64']}" 
-            style="width: 80px; height: 100px; margin-right: 50px;  {delay_time}s;">
+            <img class="cosmetic-item"
+            src="data:{globals()[f'cosme{i}_mime']};base64,{globals()[f'cosme{i}_base64']}">
         """)
 
     # 10枚分の HTML 文字列を結合
