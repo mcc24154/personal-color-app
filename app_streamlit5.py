@@ -151,12 +151,15 @@ font_base64, font_format = get_font_css_params()
 # 警告表示は show_start_page() で行うため、ここでは読み込みだけを行う
 LOGO_PATH = 'images/app_title_logo.png' 
 BG_PATH = 'images/main_visual_start.png' 
+APP_BG_PATH = 'images/background_new.jpg'
 #DECO_PATH = 'images/decorative_cosme_01.png'
 
 # 全ての画像データを取得し、グローバル変数として保持
 font_base64, font_format = get_font_css_params() # ステップ1で復元
 logo_base64, logo_mime = get_base64_image(LOGO_PATH)
 bg_base64, bg_mime = get_base64_image(BG_PATH)
+app_bg_base64, app_bg_mime = get_base64_image(APP_BG_PATH)
+start_btn_base64, start_btn_mime = get_base64_image("images/start_button.png")
 #deco_base64, deco_mime = get_base64_image(DECO_PATH)
         
 
@@ -223,15 +226,16 @@ set_cosmetic_flow_css()
 st.set_page_config(layout="wide") # 画面を広く使う設定
 
 # --- 背景色を設定するカスタムCSS ---
-BACKGROUND_COLOR = "#ffffff"  # ★★★ ここに希望のカラーコード（16進数）を入力 ★★★
-
 st.markdown(
     f"""
     <style>
     /* Streamlitアプリ全体の背景を設定 */
     .stApp {{
-        background-color: {BACKGROUND_COLOR};
+        background-image: url("data:{app_bg_mime};base64,{app_bg_base64}");
+        background-size: cover; /* 画面全体を覆うように調整 */
         background-attachment: fixed; /* 背景を固定し、スクロールしても動かないようにする */
+        background-position: center;
+        background-repeat: no-repeat;
     }}
     /* 必要に応じてメインコンテンツ部分の背景も調整 */
     .main .block-container {{
@@ -241,6 +245,8 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+
 # -------------------------------------
 # 画面の状態管理変数を初期化 
 if 'page' not in st.session_state:
@@ -306,6 +312,7 @@ def show_start_page():
     ">
         <img src="data:{logo_mime};base64,{logo_base64}"
             style="
+                display: none;
                 position: absolute;
                 top: 50%;
                 left: 50%;
@@ -314,6 +321,7 @@ def show_start_page():
                 max-width: 300px;
                 z-index: 10;
             ">
+    
 
         <img src="data:{deco1_mime};base64,{deco1_base64}"
             style="position:absolute; bottom:0%; left:27%; width:200px; animation:float1 3s ease-in-out infinite alternate; z-index:5;">
@@ -377,42 +385,36 @@ def show_start_page():
     """
     st.markdown(html_text, unsafe_allow_html=True)
     
-    # --- 1. カスタムボタンのCSSを定義 ---
-    # ボタンの見た目（背景色、文字色、角丸など）をCSSで定義
-    # .stButton > button のセレクタを使ってボタンを装飾
+    # --- 画像ボタン ---
     st.markdown("""
     <style>
-    div.stButton > button {
-        display: inline-block;
-        padding: 14px 40px;
-        background-color: #ff8fab; /* カスタムカラー */
-        color: white;
-        font-size: 18px;
-        font-weight: bold;
-        text-decoration: none;
-        border-radius: 30px;
-        transition: 0.2s;
-        border: none; /* デフォルトの枠線を消す */
-    }
-    /* ホバー時の色もCSSで指定 */
-    div.stButton > button:hover {
-        background-color: #ff6f91;
+    /* Streamlitボタンを完全に画像化 */
+    div[data-testid="stButton"] > button {
+        background-image: url("data:%s;base64,%s");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        
+        width: 240px !important;
+        height: 90px !important;
+
+        padding: 0 !important;
+        border: none;
+        font-size: 0 !important;
+        background-color: transparent !important;
     }
     </style>
-    """, unsafe_allow_html=True)
+    """ % (start_btn_mime, start_btn_base64), unsafe_allow_html=True)
 
-    # --- 2. Streamlitのボタンを配置し、機能を持たせる ---
-    # 中央寄せのためのコンテナ
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([1,2,1])
 
-    with col2: # 真ん中のカラムにボタンを配置して中央寄せにする
-        # 前回定義した on_click コールバックを使用
-        st.button(
-            t('診断を始める'), 
-            on_click=switch_to_camera,
-            use_container_width=True 
-        )
-        
+    with col2:
+        clicked = st.button("")
+
+    if clicked:
+        st.session_state.page = "diagnosis"
+        st.rerun()
+            
     st.markdown(
         """
         <style>
@@ -786,7 +788,6 @@ def show_result_page():
             unsafe_allow_html=True
         )
 
-
     else:
         # ★★★ メッセージの修正 ★★★
         st.info(t("⬆️ コーディネートの提案を見るには、年代と性別を選択してください。"))
@@ -857,11 +858,10 @@ visual_css = f"""
 all_custom_css = font_css + visual_css
 st.markdown(all_custom_css, unsafe_allow_html=True)
 
-
 # 画面状態に応じて関数を呼び出す
 if st.session_state.page == 'start':
     show_start_page()
-elif st.session_state.page == 'camera':
+elif st.session_state.page == 'diagnosis':
     show_diagnosis_page()
 elif st.session_state.page == 'result':
     show_result_page()
